@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 # pyrefly: ignore [missing-import]
 from .views import (
     RegisterView, LogoutView, AnnonceViewSet, MyTokenObtainPairView,
-    ContactViewSet, ParametresAgenceViewSet,
+    ContactViewSet, ParametresAgenceViewSet, UserViewSet,
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -11,6 +11,7 @@ router = DefaultRouter()
 router.register(r'annonces', AnnonceViewSet, basename='annonce')
 router.register(r'contacts', ContactViewSet, basename='contact')
 router.register(r'parametres', ParametresAgenceViewSet, basename='parametres')
+router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),

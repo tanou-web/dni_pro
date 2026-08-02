@@ -1,4 +1,5 @@
 from rest_framework import generics, status, permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
@@ -9,7 +10,8 @@ from gestion_actu.models import Annonce, Photo, Video, Contact, ParametresAgence
 from gestion_actu.serializers import (
     RegisterSerializer, AnnonceSerializer, UserSerializer,
     MyTokenObtainPairSerializer, ContactSerializer,
-    ParametresAgenceSerializer,
+    ParametresAgenceSerializer, UserAdminSerializer,
+    CurrentUserSerializer, PasswordChangeSerializer,
 )
 
 User = get_user_model()
@@ -55,6 +57,51 @@ class LogoutView(APIView):
 
         return Response({"message": "Déconnexion réussie."}, status=status.HTTP_200_OK)
 
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('-id')
+    serializer_class = UserAdminSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ('me', 'change_password'):
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAdminUser()]
+
+    def get_serializer_class(self):
+        if self.action == 'me':
+            return CurrentUserSerializer
+        if self.action == 'change_password':
+            return PasswordChangeSerializer
+        return UserAdminSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user.pk == request.user.pk:
+            return Response(
+                {"error": "Vous ne pouvez pas supprimer votre propre compte."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().destroy(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get', 'patch'], url_path='me')
+    def me(self, request):
+        if request.method == 'GET':
+            serializer = self.get_serializer(request.user)
+            return Response(serializer.data)
+
+        serializer = self.get_serializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='me/password')
+    def change_password(self, request):
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"message": "Mot de passe modifie avec succes."})
+
+
 # --- Annonce ViewSet ---
 class AnnonceViewSet(viewsets.ModelViewSet):
     queryset = Annonce.objects.all()
@@ -84,16 +131,18 @@ class AnnonceViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         annonce = serializer.save()
+        clear_photos = self.request.data.get('clear_photos') in ('true', '1', True)
+        clear_videos = self.request.data.get('clear_videos') in ('true', '1', True)
         
         # Replace photos if new ones are uploaded
-        if 'photos' in self.request.FILES:
+        if clear_photos or 'photos' in self.request.FILES:
             annonce.photos.all().delete()
             photos = self.request.FILES.getlist('photos')
             for index, photo_file in enumerate(photos):
                 Photo.objects.create(annonce=annonce, image=photo_file, ordre=index)
                 
         # Replace videos if new ones are uploaded
-        if 'videos' in self.request.FILES:
+        if clear_videos or 'videos' in self.request.FILES:
             annonce.videos.all().delete()
             videos = self.request.FILES.getlist('videos')
             for index, video_file in enumerate(videos):
