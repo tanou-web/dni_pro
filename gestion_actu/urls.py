@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     RegisterView, LogoutView, AnnonceViewSet, MyTokenObtainPairView,
     ContactViewSet, ParametresAgenceViewSet, UserViewSet,
+    HomeFeatureViewSet, PartnerViewSet,
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -12,6 +13,8 @@ router.register(r'annonces', AnnonceViewSet, basename='annonce')
 router.register(r'contacts', ContactViewSet, basename='contact')
 router.register(r'parametres', ParametresAgenceViewSet, basename='parametres')
 router.register(r'users', UserViewSet, basename='user')
+router.register(r'home-features', HomeFeatureViewSet, basename='home-feature')
+router.register(r'partners', PartnerViewSet, basename='partner')
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from gestion_actu.models import Annonce, Photo, Video, Contact, Favori, ParametresAgence
+from gestion_actu.models import Annonce, Photo, Video, Contact, Favori, ParametresAgence, HomeFeature, Partner
 
 User = get_user_model()
 
@@ -151,7 +151,12 @@ class ParametresAgenceSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'nom_agence', 'telephone', 'whatsapp', 'email', 'adresse',
             'site_web', 'facebook', 'instagram', 'logo_image', 'logo_image_url',
-            'hero_image', 'hero_image_url', 'updated_at',
+            'hero_image', 'hero_image_url',
+            'feature1_title', 'feature1_desc',
+            'feature2_title', 'feature2_desc',
+            'feature3_title', 'feature3_desc',
+            'feature4_title', 'feature4_desc',
+            'updated_at',
         )
         read_only_fields = ('id', 'updated_at')
 
@@ -169,4 +174,28 @@ class ParametresAgenceSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.hero_image.url)
         if obj.hero_image:
             return obj.hero_image.url
+        return ''
+
+
+class HomeFeatureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeFeature
+        fields = ('id', 'title', 'description', 'ordre', 'actif', 'updated_at')
+        read_only_fields = ('id', 'updated_at')
+
+
+class PartnerSerializer(serializers.ModelSerializer):
+    logo_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Partner
+        fields = ('id', 'nom', 'description', 'site_web', 'logo', 'logo_url', 'ordre', 'actif', 'updated_at')
+        read_only_fields = ('id', 'logo_url', 'updated_at')
+
+    def get_logo_url(self, obj):
+        request = self.context.get('request')
+        if obj.logo and request:
+            return request.build_absolute_uri(obj.logo.url)
+        if obj.logo:
+            return obj.logo.url
         return ''

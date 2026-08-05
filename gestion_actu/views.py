@@ -6,12 +6,13 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from gestion_actu.models import Annonce, Photo, Video, Contact, ParametresAgence
+from gestion_actu.models import Annonce, Photo, Video, Contact, ParametresAgence, HomeFeature, Partner
 from gestion_actu.serializers import (
     RegisterSerializer, AnnonceSerializer, UserSerializer,
     MyTokenObtainPairSerializer, ContactSerializer,
     ParametresAgenceSerializer, UserAdminSerializer,
     CurrentUserSerializer, PasswordChangeSerializer,
+    HomeFeatureSerializer, PartnerSerializer,
 )
 
 User = get_user_model()
@@ -180,3 +181,35 @@ class ParametresAgenceViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         serializer = self.get_serializer(self.get_object())
         return Response(serializer.data)
+
+
+class HomeFeatureViewSet(viewsets.ModelViewSet):
+    queryset = HomeFeature.objects.all()
+    serializer_class = HomeFeatureSerializer
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        queryset = HomeFeature.objects.all()
+        if self.action in ('list', 'retrieve') and not self.request.user.is_authenticated:
+            queryset = queryset.filter(actif=True)
+        return queryset
+
+
+class PartnerViewSet(viewsets.ModelViewSet):
+    queryset = Partner.objects.all()
+    serializer_class = PartnerSerializer
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        queryset = Partner.objects.all()
+        if self.action in ('list', 'retrieve') and not self.request.user.is_authenticated:
+            queryset = queryset.filter(actif=True)
+        return queryset

@@ -124,6 +124,19 @@ class ParametresAgence(models.Model):
     instagram = models.URLField(blank=True, default='https://instagram.com/mycitinest')
     logo_image = models.ImageField(upload_to='agence/', blank=True, null=True)
     hero_image = models.ImageField(upload_to='agence/', blank=True, null=True)
+    
+    feature1_title = models.CharField(max_length=100, default='Site officiel')
+    feature1_desc = models.CharField(max_length=200, default='Zéro arnaque')
+    
+    feature2_title = models.CharField(max_length=100, default='Annonces vérifiées')
+    feature2_desc = models.CharField(max_length=200, default='Biens contrôlés')
+    
+    feature3_title = models.CharField(max_length=100, default='Accompagnement')
+    feature3_desc = models.CharField(max_length=200, default='Conseils personnalisés')
+    
+    feature4_title = models.CharField(max_length=100, default='Transactions sécurisées')
+    feature4_desc = models.CharField(max_length=200, default='En toute simplicité')
+    
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -133,3 +146,39 @@ class ParametresAgence(models.Model):
 
     def __str__(self):
         return self.nom_agence
+
+
+class HomeFeature(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.CharField(max_length=200, blank=True)
+    ordre = models.PositiveIntegerField(default=0)
+    actif = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['ordre', 'pk']
+        db_table = 'home_feature'
+        verbose_name = 'Champ accueil'
+        verbose_name_plural = 'Champs accueil'
+
+    def __str__(self):
+        return self.title
+
+
+class Partner(models.Model):
+    nom = models.CharField(max_length=120)
+    description = models.CharField(max_length=220, blank=True)
+    site_web = models.URLField(blank=True)
+    logo = models.ImageField(upload_to='partenaires/', blank=True, null=True)
+    ordre = models.PositiveIntegerField(default=0)
+    actif = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['ordre', 'pk']
+        db_table = 'partner'
+        verbose_name = 'Partenaire'
+        verbose_name_plural = 'Partenaires'
+
+    def __str__(self):
+        return self.nom
